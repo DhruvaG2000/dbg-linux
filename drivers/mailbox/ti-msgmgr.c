@@ -498,7 +498,7 @@ static int ti_msgmgr_queue_rx_irq_req(struct device *dev,
 
 	/* With the expectation that the IRQ might be shared in SoC */
 	ret = request_irq(qinst->irq, ti_msgmgr_queue_rx_interrupt,
-			  IRQF_SHARED, qinst->name, chan);
+			  IRQF_SHARED | IRQF_NO_SUSPEND, qinst->name, chan);
 	if (ret) {
 		dev_err(dev, "Unable to get IRQ %d on %s(res=%d)\n",
 			qinst->irq, qinst->name, ret);
