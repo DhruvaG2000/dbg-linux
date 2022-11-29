@@ -246,12 +246,25 @@ static int ti_msgmgr_queue_rx_poll_timeout(struct mbox_chan *chan, int timeout_u
 	struct ti_msgmgr_inst *inst = dev_get_drvdata(dev);
 	struct ti_queue_inst *qinst = chan->con_priv;
 	const struct ti_msgmgr_desc *desc = inst->desc;
+	int timeout_cycles = timeout_us * 1000;
 	int msg_count;
 	int ret;
 
-	ret = readl_poll_timeout_atomic(qinst->queue_state, msg_count,
-					(msg_count & desc->status_cnt_mask),
-					10, timeout_us);
+	if (unlikely(timekeeping_suspended)) {
+		ret = -ETIMEDOUT;
+		while (timeout_cycles--) {
+			msg_count = readl(qinst->queue_state);
+			if (msg_count & desc->status_cnt_mask) {
+				ret = 0;
+				break;
+			}
+			udelay(1);
+		}
+	} else {
+		ret = readl_poll_timeout_atomic(qinst->queue_state, msg_count,
+						(msg_count & desc->status_cnt_mask),
+						10, timeout_us);
+	}
 	if (ret != 0)
 		return ret;
 
