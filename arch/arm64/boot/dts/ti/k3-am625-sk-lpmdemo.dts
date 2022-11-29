@@ -19,6 +19,13 @@
 			/delete-property/ default-state;
 		};
 	};
+
+	intw_ti_sci: intw-ti-sci {
+		compatible = "ti,sci-wkup";
+		ti,sci = <&dmsc>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+	};
 };
 
 &dmsc {
