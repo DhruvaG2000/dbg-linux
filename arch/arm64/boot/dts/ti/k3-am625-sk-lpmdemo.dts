@@ -52,6 +52,9 @@
 	/delete-property/ power-domains;
 	/delete-property/ clock-names;
 	/delete-property/ clocks;
+	interrupts-extended = <&gic500 GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>,
+			      <&main_pmx0 0x1c8>; /* (D14) UART0_RXD PADCONFIG114 */
+	interrupt-names = "irq", "wakeup";
 };
 
 &cbass_mcu {
