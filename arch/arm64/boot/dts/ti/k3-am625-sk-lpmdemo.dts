@@ -48,6 +48,10 @@
 	status = "disabled";
 };
 
+&main_pmx0 {
+	interrupts = <&intw_ti_sci 0x80>; /* WAKE_SOURCE_MAIN_IO */
+};
+
 &main_uart0 {
 	/delete-property/ power-domains;
 	/delete-property/ clock-names;
