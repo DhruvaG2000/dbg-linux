@@ -1958,7 +1958,7 @@ static const struct pcs_soc_data pinctrl_single_am437x = {
 };
 
 static const struct pcs_soc_data pinctrl_single_am62 = {
-	.flags = PCS_QUIRK_SHARED_IRQ,
+	.flags = PCS_QUIRK_SHARED_IRQ | PCS_CONTEXT_LOSS_OFF,
 	.irq_enable_mask = (1 << 29),   /* WKUP_EN */
 	.irq_status_mask = (1 << 30),   /* WKUP_EVT */
 };
