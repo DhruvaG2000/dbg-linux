@@ -492,6 +492,17 @@ config TI_SCI_INTR_IRQCHIP
 	  If you wish to use interrupt router irq resources managed by the
 	  TI System Controller, say Y here. Otherwise, say N.
 
+config TI_SCI_WKUP_IRQCHIP
+	bool "Texas Instruments K3 Wakeup Interrupt Controller"
+	depends on TI_SCI_PROTOCOL
+	select IRQ_DOMAIN_HIERARCHY
+	default K3_ARCH
+	help
+	  This enables the irqchip driver support for K3 wakeup interrupts
+	  over TI System Control Interface available on some new TI's SoCs.
+	  If you wish to use wakeup interrupts managed by the TI System
+	  Controller, say Y here. Otherwise, say N.
+
 config TI_SCI_INTA_IRQCHIP
 	tristate "TI SCI INTA Interrupt Controller"
 	depends on ARCH_K3
