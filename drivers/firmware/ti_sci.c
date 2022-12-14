@@ -3545,6 +3545,11 @@ static int __maybe_unused ti_sci_suspend(struct device *dev)
 	struct ti_sci_info *info = dev_get_drvdata(dev);
 	int ret = 0;
 
+	ret = ti_sci_cmd_set_io_isolation(&info->handle, TISCI_MSG_VALUE_IO_ENABLE);
+	if (ret)
+		return ret;
+	dev_info(dev, "ti_sci suspend set isolation: %d\n", ret);
+
 	ret = ti_sci_prepare_system_suspend(info);
 	if (ret)
 		return ret;
@@ -3562,8 +3567,14 @@ static int __maybe_unused ti_sci_suspend(struct device *dev)
 static int __maybe_unused ti_sci_resume(struct device *dev)
 {
 	struct ti_sci_info *info = dev_get_drvdata(dev);
+	int ret = 0;
 
 	ti_sci_set_is_suspending(info, false);
+
+	ret = ti_sci_cmd_set_io_isolation(&info->handle, TISCI_MSG_VALUE_IO_DISABLE);
+	if (ret)
+		return ret;
+	dev_info(dev, "ti_sci_resume disable isolation: %d\n", ret);
 
 	return 0;
 }
