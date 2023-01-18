@@ -72,6 +72,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-hdmi-audio.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62x-lp-sk-oldi-panel.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-mcan.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-ecap-capture.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-qspi-flash.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62x-lp-sk-nand.dtbo
 
 dtb-$(CONFIG_ARCH_K3) += k3-j721e-fpdlink-cpb-fusion.dtbo
