@@ -25,6 +25,17 @@
 			status = "disabled";
 		};
 	};
+
+	intw_ti_sci: intw-ti-sci {
+		compatible = "ti,sci-wkup";
+		ti,sci = <&dmsc>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+	};
+};
+
+&main_pmx0 {
+	interrupts = <&intw_ti_sci 0x80>; /* WAKE_SOURCE_MAIN_IO */
 };
 
 &dmsc {

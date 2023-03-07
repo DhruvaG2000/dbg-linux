@@ -432,6 +432,7 @@ static inline int ti_sci_do_xfer(struct ti_sci_info *info,
 {
 	int ret;
 	int timeout;
+	int timeout_cycles = info->desc->max_rx_timeout_ms * 1000;
 	struct device *dev = info->dev;
 	bool done_state = true;
 
@@ -447,14 +448,23 @@ static inline int ti_sci_do_xfer(struct ti_sci_info *info,
 		if (!wait_for_completion_timeout(&xfer->done, timeout))
 			ret = -ETIMEDOUT;
 	} else {
-		/*
-		 * If we are suspending, we cannot use wait_for_completion_timeout
-		 * during noirq phase, so we must manually poll the completion.
-		 */
-		ret = read_poll_timeout_atomic(try_wait_for_completion, done_state,
-					       done_state, 1,
-					       info->desc->max_rx_timeout_ms * 1000,
-					       false, &xfer->done);
+		if (unlikely(timekeeping_suspended)) {
+			while (timeout_cycles-- && !ret) {
+				ret = try_wait_for_completion(&xfer->done);
+				udelay(1);
+			}
+			ret = ret ? 0: -ETIMEDOUT;
+		} else {
+			/*
+			 * If we are suspending, we cannot use wait_for_completion_timeout
+			 * during noirq phase, so we must manually poll the completion.
+			 */
+			ret = read_poll_timeout_atomic(try_wait_for_completion,
+						       done_state,
+						       done_state, 1,
+						       info->desc->max_rx_timeout_ms * 1000,
+						       false, &xfer->done);
+		}
 	}
 
 	if (ret == -ETIMEDOUT)
@@ -3605,6 +3615,11 @@ static int __maybe_unused ti_sci_suspend(struct device *dev)
 	struct ti_sci_info *info = dev_get_drvdata(dev);
 	int ret;
 
+	ret = ti_sci_cmd_set_io_isolation(&info->handle, TISCI_MSG_VALUE_IO_ENABLE);
+	if (ret)
+		return ret;
+	dev_info(dev, "ti_sci suspend set isolation: %d\n", ret);
+
 	ret = ti_sci_prepare_system_suspend(info);
 	if (ret)
 		return ret;
@@ -3621,8 +3636,14 @@ static int __maybe_unused ti_sci_suspend(struct device *dev)
 static int __maybe_unused ti_sci_resume(struct device *dev)
 {
 	struct ti_sci_info *info = dev_get_drvdata(dev);
+	int ret = 0;
 
 	ti_sci_set_is_suspending(info, false);
+
+	ret = ti_sci_cmd_set_io_isolation(&info->handle, TISCI_MSG_VALUE_IO_DISABLE);
+	if (ret)
+		return ret;
+	dev_info(dev, "ti_sci_resume disable isolation: %d\n", ret);
 
 	return 0;
 }
