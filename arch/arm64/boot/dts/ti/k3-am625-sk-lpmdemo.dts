@@ -34,6 +34,10 @@
 	};
 };
 
+&main_pmx0 {
+	interrupts = <&intw_ti_sci 0x80>; /* WAKE_SOURCE_MAIN_IO */
+};
+
 &dmsc {
 	reg-names = "lpm";
 	reg = <0x00 0x78000000 0x00 0x8000>;
