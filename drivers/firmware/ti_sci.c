@@ -31,6 +31,10 @@
 /* Low power mode memory context size */
 #define LPM_CTX_MEM_SIZE 0x80000
 
+/* UART Padconfig address and value to write for WKUP EN */
+#define UART_PAD_FOR_IO_WKUP		0x000F41C8
+#define UART_PAD_FOR_IO_WKUP_MASK	BIT(16) | BIT(18) | BIT(29)
+
 /* List of all TI SCI devices active in system */
 static LIST_HEAD(ti_sci_list);
 /* Protection for the entire list */
@@ -1889,6 +1893,11 @@ static int ti_sci_cmd_set_io_isolation(const struct ti_sci_handle *handle,
 	struct ti_sci_xfer *xfer;
 	struct device *dev;
 	int ret = 0;
+
+	void __iomem *reg_base_loc = ioremap(UART_PAD_FOR_IO_WKUP, 0x2);
+	u32 uart_val = 0x0;
+	uart_val = readl(reg_base_loc);
+	printk("mydbg: __ %s#%d: uart_val = 0x%X  __\n", __func__, __LINE__, uart_val);
 
 	if (IS_ERR(handle))
 		return PTR_ERR(handle);
