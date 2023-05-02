@@ -13,6 +13,7 @@
 / {
 	aliases {
 		serial2 = &main_uart0;
+		serial3 = &main_uart1;
 		mmc0 = &sdhci0;
 		mmc1 = &sdhci1;
 		mmc2 = &sdhci2;
@@ -141,6 +142,11 @@
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x1c8, PIN_INPUT, 0) /* (D14/A13) UART0_RXD */
 			AM62X_IOPAD(0x1cc, PIN_OUTPUT, 0) /* (E14/E11) UART0_TXD */
+		>;
+	};
+	main_uart1_pins_default: main-uart1-pins-default {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x01a0, PIN_INPUT, 7) /* (E18) MCASP0_AXR0.GPIO1_10 */
 		>;
 	};
 
@@ -300,7 +306,10 @@
 
 &main_uart1 {
 	/* Main UART1 is used by TIFS firmware */
-	status = "reserved";
+	/* temporarily use it as wakeup source */
+	/* status = "reserved"; */
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_uart1_pins_default>;
 };
 
 &main_i2c0 {

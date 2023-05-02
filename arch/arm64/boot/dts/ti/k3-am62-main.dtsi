@@ -195,8 +195,10 @@
 		#pinctrl-cells = <1>;
 		pinctrl-single,register-width = <32>;
 		pinctrl-single,function-mask = <0xffffffff>;
-		interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-controller;
+		interrupt-parent = <&gic500>;
+		/* interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>; */
 		#interrupt-cells = <1>;
 	};
 
