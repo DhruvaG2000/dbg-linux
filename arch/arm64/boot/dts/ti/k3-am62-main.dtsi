@@ -243,8 +243,8 @@
 		#pinctrl-cells = <1>;
 		pinctrl-single,register-width = <32>;
 		pinctrl-single,function-mask = <0xffffffff>;
-		interrupts = <&intw_ti_sci 0x80>; /* WAKE_SOURCE_MAIN_IO */
 		interrupt-controller;
+		interrupts-extended = <&intw_ti_sci 0x80>; /* WAKE_SOURCE_MAIN_IO */
 		#interrupt-cells = <1>;
 	};
 
