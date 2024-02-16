@@ -660,11 +660,13 @@
 };
 
 &cpsw_port1 {
+	status = "disabled";
 	phy-mode = "rgmii-rxid";
 	phy-handle = <&cpsw3g_phy0>;
 };
 
 &cpsw_port2 {
+	status = "disabled";
 	phy-mode = "rmii";
 	phy-handle = <&cpsw3g_phy1>;
 };
@@ -723,6 +725,7 @@
 
 	rtc: rtc@68 {
 		compatible = "ti,bq32000";
+	status = "disabled";
 		reg = <0x68>;
 		interrupt-parent = <&main_gpio0>;
 		interrupts = <2 IRQ_TYPE_EDGE_FALLING>;
@@ -829,6 +832,7 @@
 	status = "okay";
 
 	it66121hdmitx: hdmitx@4c {
+	status = "disabled";
 		#sound-dai-cells = <0>;
 		compatible = "ite,it66121";
 		pinctrl-names = "default";
