@@ -13,6 +13,19 @@
 #include "common.h"
 #include "notify.h"
 
+#include <linux/printk.h>
+#include <linux/kobject.h>
+#include <linux/sysfs.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/string.h>
+
+static struct kobject *example_kobject;
+static size_t foo;
+static int scmi_rt_test(const struct scmi_protocol_handle *ph);
+struct scmi_protocol_handle *globalHandle;
+static u8 *glob_prot_imp;
+
 #define SCMI_BASE_NUM_SOURCES		1
 #define SCMI_BASE_MAX_CMD_ERR_COUNT	1024
 
@@ -370,6 +383,21 @@ static const struct scmi_protocol_events base_protocol_events = {
 	.num_sources = SCMI_BASE_NUM_SOURCES,
 };
 
+static ssize_t foo_show(struct kobject *kobj, struct kobj_attribute *attr,
+		                      char *buf)
+{
+		scmi_rt_test(globalHandle);
+	        return 0;
+}
+
+static ssize_t attr_store(struct kobject *kobj,
+                       struct kobj_attribute *attr,
+               const char *buf, size_t count) {
+	return count;
+}
+
+static struct kobj_attribute foo_attribute = __ATTR(foo, 0660, foo_show, attr_store);
+
 static int scmi_base_protocol_init(const struct scmi_protocol_handle *ph)
 {
 	int id, ret;
@@ -403,7 +431,60 @@ static int scmi_base_protocol_init(const struct scmi_protocol_handle *ph)
 
 	scmi_setup_protocol_implemented(ph, prot_imp);
 
-	dev_info(dev, "SCMI Protocol v%d.%d '%s:%s' Firmware version 0x%x\n",
+	/***************TEST CODE********************/
+	globalHandle = ph;
+	glob_prot_imp = prot_imp;
+	example_kobject = kobject_create_and_add("kobject_scmi",
+			kernel_kobj);
+
+	int error = sysfs_create_file(example_kobject, &foo_attribute.attr);
+	if (error) {
+		printk("failed to create the foo file in /sys/kernel/kobject_example \n");
+	}
+	 /********************************/
+
+	dev_dbg(dev, "SCMI Protocol v%d.%d '%s:%s' Firmware version 0x%x\n",
+		 rev->major_ver, rev->minor_ver, rev->vendor_id,
+		 rev->sub_vendor_id, rev->impl_ver);
+	dev_dbg(dev, "Found %d protocol(s) %d agent(s)\n", rev->num_protocols,
+		rev->num_agents);
+
+	for (id = 0; id < rev->num_agents; id++) {
+		scmi_base_discover_agent_get(ph, id, name);
+		dev_dbg(dev, "Agent %d: %s\n", id, name);
+	}
+
+	return 0;
+}
+
+static int scmi_rt_test(const struct scmi_protocol_handle *ph)
+{
+	int id, ret;
+	u32 version;
+	char name[SCMI_SHORT_NAME_MAX_SIZE];
+	struct device *dev = ph->dev;
+	struct scmi_revision_info *rev = scmi_revision_area_get(ph);
+
+	ret = ph->xops->version_get(ph, &version);
+	if (ret)
+		return ret;
+
+	rev->major_ver = PROTOCOL_REV_MAJOR(version),
+	rev->minor_ver = PROTOCOL_REV_MINOR(version);
+	ph->set_priv(ph, rev);
+
+	ret = scmi_base_attributes_get(ph);
+	if (ret)
+		return ret;
+
+	scmi_base_vendor_id_get(ph, false);
+	scmi_base_vendor_id_get(ph, true);
+	scmi_base_implementation_version_get(ph);
+	scmi_base_implementation_list_get(ph, glob_prot_imp);
+
+	scmi_setup_protocol_implemented(ph, glob_prot_imp);
+
+	dev_dbg(dev, "SCMI Protocol v%d.%d '%s:%s' Firmware version 0x%x\n",
 		 rev->major_ver, rev->minor_ver, rev->vendor_id,
 		 rev->sub_vendor_id, rev->impl_ver);
 	dev_dbg(dev, "Found %d protocol(s) %d agent(s)\n", rev->num_protocols,
