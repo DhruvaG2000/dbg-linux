@@ -12,6 +12,12 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0x0 0x00 0x70000000 0x10000>;
+
+		scmi_shmem: sram@0 {
+			compatible = "arm,scmi-shmem";
+			reg = <0x0 0x100>;
+		};
+
 	};
 
 	gic500: interrupt-controller@1800000 {
@@ -682,7 +688,8 @@
 			assigned-clocks = <&k3_clks 75 7>;
 			assigned-clock-parents = <&k3_clks 75 8>;
 			assigned-clock-rates = <166666666>;
-			power-domains = <&k3_pds 75 TI_SCI_PD_EXCLUSIVE>;
+			/* power-domains = <&k3_pds 75 TI_SCI_PD_EXCLUSIVE>; */
+			power-domains = <&scmi_pd 1>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			status = "disabled";
