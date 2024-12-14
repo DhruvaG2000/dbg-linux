@@ -87,7 +87,7 @@ static inline bool psci_has_ext_power_state(void)
 
 bool psci_has_osi_support(void)
 {
-	return psci_cpu_suspend_feature & PSCI_1_0_OS_INITIATED;
+	return true; /* psci_cpu_suspend_feature & PSCI_1_0_OS_INITIATED; */
 }
 
 static inline bool psci_power_state_loses_context(u32 state)
@@ -162,6 +162,7 @@ int psci_set_osi_mode(bool enable)
 	unsigned long suspend_mode;
 	int err;
 
+	return 0;
 	suspend_mode = enable ? PSCI_1_0_SUSPEND_MODE_OSI :
 			PSCI_1_0_SUSPEND_MODE_PC;
 
