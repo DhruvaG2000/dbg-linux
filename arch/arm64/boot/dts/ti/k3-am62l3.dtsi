@@ -38,6 +38,7 @@
 			d-cache-size = <0x8000>;
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
+			cpu-idle-states = <&CPU_SLEEP_TI>;
 			next-level-cache = <&l2_0>;
 		};
 
@@ -52,6 +53,7 @@
 			d-cache-size = <0x8000>;
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
+			cpu-idle-states = <&CPU_SLEEP_TI>;
 			next-level-cache = <&l2_0>;
 		};
 	};
@@ -63,5 +65,19 @@
 		cache-size = <0x40000>;
 		cache-line-size = <64>;
 		cache-sets = <256>;
+	};
+
+	idle-states {
+		entry-method = "psci";
+
+		CPU_SLEEP_TI: stby {
+			compatible = "arm,idle-state";
+			idle-state-name = "AM62L_IDLE";
+			arm,psci-suspend-param = <0x02>;
+			/* local-timer-stop; */
+			entry-latency-us = <3>;
+			exit-latency-us = <6>;
+			min-residency-us = <100>;
+		};
 	};
 };
