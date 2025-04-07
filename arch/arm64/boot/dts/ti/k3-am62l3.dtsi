@@ -39,7 +39,8 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
-			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>;
+			power-domains = <&CPU_PD0>;
+			power-domain-names = "psci";
 		};
 
 		cpu1: cpu@1 {
@@ -54,7 +55,8 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
-			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>;
+			power-domains = <&CPU_PD1>;
+			power-domain-names = "psci";
 		};
 	};
 
@@ -88,5 +90,56 @@
 			exit-latency-us = <1000>;
 			min-residency-us = <5000>;
 		};
+	};
+
+/*
+ * psci-suspend-param bits:
+ * From: PSCI spec, Table 7
+ *
+ * 31:26 - reserved, must be zero
+ * 25:24 - PowerLevel: 0-core, 1-cluster, 2-system.
+ * 23:17 - reserved, must be zero
+ * 16    - StateType: 0-retention, 1-power-down (context loss)
+ * 15:0  - StateID.
+ */
+
+	domain-idle-states {
+		cluster_sleep_0: cluster-sleep-0 {
+			compatible = "domain-idle-state";
+			arm,psci-suspend-param = <0x01000010>; /* cluster state */
+			entry-latency-us = <1000>;
+			exit-latency-us = <1000>;
+			min-residency-us = <5000>;
+		};
+
+		cluster_sleep_1: cluster-sleep-1 {
+			compatible = "domain-idle-state";
+			arm,psci-suspend-param = <0x02000020>; /* system state */
+			entry-latency-us = <5000>;
+			exit-latency-us = <5000>;
+			min-residency-us = <50000>;
+		};
+	};
+};
+
+&psci {
+	compatible = "arm,psci-1.0";
+	method = "smc";
+
+	CPU_PD0: power-controller-cpu0 {
+		#power-domain-cells = <0>;
+		power-domains = <&CLUSTER_PD>;
+		domain-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>;
+	};
+
+	CPU_PD1: power-controller-cpu1 {
+		#power-domain-cells = <0>;
+		power-domains = <&CLUSTER_PD>;
+		domain-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>;
+	};
+
+	CLUSTER_PD: power-controller-cluster {
+		#power-domain-cells = <0>;
+		domain-idle-states = <&cluster_sleep_0>, <&cluster_sleep_1>;
 	};
 };
