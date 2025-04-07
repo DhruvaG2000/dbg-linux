@@ -39,6 +39,7 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
+			cpu-idle-states = <&CPU_SLEEP_0>;
 		};
 
 		cpu1: cpu@1 {
@@ -53,6 +54,7 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
+			cpu-idle-states = <&CPU_SLEEP_0>;
 		};
 	};
 
@@ -63,5 +65,19 @@
 		cache-size = <0x40000>;
 		cache-line-size = <64>;
 		cache-sets = <256>;
+	};
+
+
+	idle-states {
+		entry-method = "psci";
+
+		CPU_SLEEP_0: STBY {
+			compatible = "arm,idle-state";
+			idle-state-name = "Standby";
+			arm,psci-suspend-param = <0x00000001>;
+			entry-latency-us = <300>;
+			exit-latency-us = <600>;
+			min-residency-us = <1000>;
+		};
 	};
 };
