@@ -141,5 +141,10 @@
 	CLUSTER_PD: power-controller-cluster {
 		#power-domain-cells = <0>;
 		domain-idle-states = <&cluster_sleep_0>, <&cluster_sleep_1>;
+		power-domains = <&MAIN_PD>;
+	};
+
+	MAIN_PD: power-controller-main {
+		#power-domain-cells = <0>;
 	};
 };
