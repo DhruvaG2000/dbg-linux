@@ -47,6 +47,9 @@
 				reg = <0x11>;
 				#power-domain-cells = <1>;
 				bootph-all;
+
+				power-domains = <&MAIN_PD>, <&WKUP_PD>;
+				power-domains-child-ids = <15>, <19>;
 			};
 		};
 	};
