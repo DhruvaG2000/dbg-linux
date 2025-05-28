@@ -147,4 +147,8 @@
 	MAIN_PD: power-controller-main {
 		#power-domain-cells = <0>;
 	};
+
+	WKUP_PD: power-controller-wkup {
+		#power-domain-cells = <0>;
+	};
 };
