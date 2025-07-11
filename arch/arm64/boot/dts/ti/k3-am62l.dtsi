@@ -48,104 +48,23 @@
 				#power-domain-cells = <1>;
 				bootph-all;
 
-				power-domain-map = <0  &MAIN_PD>, /* ADC0 */
-						   <1  &MAIN_PD>, /* MAIN_GPIOMUX_INTROUTER0 */
-						   <2  &MAIN_PD>, /* TIMESYNC_INTROUTER0 */
-						   <3  &MAIN_PD>, /* CPSW0 */
-						   <4  &MAIN_PD>, /* CPT2_AGGR0 */
-						   <5  &MAIN_PD>, /* CPT2_AGGR1 */
-						   <6  &WKUP_PD>, /* WKUP_CPT2_AGGR0 */
-						   <7  &MAIN_PD>, /* STM0 */
-						   <8  &MAIN_PD>, /* DEBUGSS_WRAP0 */
-						   <9  &MAIN_PD>, /* DMASS0 */
-						   <10 &MAIN_PD>, /* DMASS0_BCDMA_0 */
-						   <11 &MAIN_PD>, /* DMASS0_PKTDMA_0 */
-						   <12 &WKUP_PD>, /* WKUP_DMASS0 */
-						   <13 &WKUP_PD>, /* WKUP_DMASS0_DTHE */
-						   <14 &WKUP_PD>, /* WKUP_DMASS0_XLCDMA_0 */
-						   <15 &MAIN_PD>, /* TIMER0 */
+				power-domain-map = <15 &MAIN_PD>, /* TIMER0 */
 						   <16 &MAIN_PD>, /* TIMER1 */
 						   <17 &MAIN_PD>, /* TIMER2 */
 						   <18 &MAIN_PD>, /* TIMER3 */
 						   <19 &WKUP_PD>, /* WKUP_TIMER0 */
 						   <20 &WKUP_PD>, /* WKUP_TIMER1 */
-						   <21 &WKUP_PD>, /* WKUP_SMS_LITE0 */
-						   <22 &MAIN_PD>, /* ECAP0 */
-						   <23 &MAIN_PD>, /* ECAP1 */
-						   <24 &MAIN_PD>, /* ECAP2 */
-						   <25 &MAIN_PD>, /* ELM0 */
 						   <26 &MAIN_PD>, /* MMCSD1 */
 						   <27 &MAIN_PD>, /* MMCSD2 */
 						   <28 &MAIN_PD>, /* MMCSD0 */
-						   <29 &MAIN_PD>, /* EQEP0 */
-						   <30 &MAIN_PD>, /* EQEP1 */
-						   <31 &MAIN_PD>, /* EQEP2 */
-						   <32 &MAIN_PD>, /* FSS0 */
-						   <33 &MAIN_PD>, /* GICSS0 */
 						   <34 &MAIN_PD>, /* GPIO0 */
 						   <35 &MAIN_PD>, /* GPIO2 */
 						   <36 &WKUP_PD>, /* WKUP_GPIO0 */
-						   <37 &MAIN_PD>, /* GPMC0 */
-						   <38 &MAIN_PD>, /* DSS_DSI0 */
-						   <39 &MAIN_PD>, /* DSS0 */
-						   <40 &MAIN_PD>, /* EPWM0 */
-						   <41 &MAIN_PD>, /* EPWM1 */
-						   <42 &MAIN_PD>, /* EPWM2 */
-						   <43 &MAIN_PD>, /* LED0 */
-						   <44 &MAIN_PD>, /* PBIST0 */
-						   <45 &WKUP_PD>, /* WKUP_PBIST0 */
-						   <46 &WKUP_PD>, /* WKUP_VTM0 */
-						   <47 &MAIN_PD>, /* MCAN0 */
-						   <48 &MAIN_PD>, /* MCAN1 */
-						   <49 &MAIN_PD>, /* MCAN2 */
-						   <50 &MAIN_PD>, /* MCASP0 */
-						   <51 &MAIN_PD>, /* MCASP1 */
-						   <52 &MAIN_PD>, /* MCASP2 */
 						   <53 &MAIN_PD>, /* I2C0 */
 						   <54 &MAIN_PD>, /* I2C1 */
 						   <55 &MAIN_PD>, /* I2C2 */
 						   <56 &MAIN_PD>, /* I2C3 */
-						   <57 &WKUP_PD>, /* WKUP_I2C0 */
-						   <58 &WKUP_PD>, /* WKUP_GTC0 */
-						   <59 &WKUP_PD>, /* WKUP_RTCSS0 */
-						   <60 &MAIN_PD>, /* RTI0 */
-						   <61 &MAIN_PD>, /* RTI1 */
-						   <62 &MAIN_PD>, /* DEBUGSS0 */
-						   <63 &MAIN_PD>, /* MSRAM_96K0 */
-						   <64 &WKUP_PD>, /* WKUP_PSRAM_64K0 */
-						   <65 &MAIN_PD>, /* ROM0 */
-						   <66 &MAIN_PD>, /* PSC0 */
-						   <67 &WKUP_PD>, /* WKUP_DEEPSLEEP_SOURCES0 */
-						   <68 &MAIN_PD>, /* MCU_MCU_16FF0 */
-						   <69 &MAIN_PD>, /* ARM_COREPACK_0 */
-						   <70 &MAIN_PD>, /* DDR16SS0 */
-						   <71 &WKUP_PD>, /* WKUP_DFTSS0 */
-						   <72 &MAIN_PD>, /* MCSPI0 */
-						   <73 &MAIN_PD>, /* MCSPI1 */
-						   <74 &MAIN_PD>, /* MCSPI2 */
-						   <75 &MAIN_PD>, /* MCSPI3 */
-						   <76 &MAIN_PD>, /* TRNG_DRBG_EIP76D_WRAP0 */
-						   <77 &MAIN_PD>, /* UART1 */
-						   <78 &MAIN_PD>, /* UART2 */
-						   <79 &MAIN_PD>, /* UART3 */
-						   <80 &MAIN_PD>, /* UART4 */
-						   <81 &MAIN_PD>, /* UART5 */
-						   <82 &MAIN_PD>, /* UART6 */
-						   <83 &WKUP_PD>, /* WKUP_UART0 */
-						   <84 &MAIN_PD>, /* USB0 */
-						   <85 &MAIN_PD>, /* USB1 */
-						   <86 &MAIN_PD>, /* DPHY_TX0 */
-						   <87 &MAIN_PD>, /* CLKDIV_0 */
-						   <88 &MAIN_PD>, /* PBIST_0 */
-						   <89 &MAIN_PD>, /* UART0 */
-						   <90 &MAIN_PD>, /* BOARD0 */
-						   <91 &WKUP_PD>, /* WKUP_GTCCLK_SEL_DEV_VD */
-						   <92 &WKUP_PD>, /* WKUP_OBSCLK_MUX_SEL_DEV_VD */
-						   <93 &WKUP_PD>, /* WKUP_CLKOUT_SEL_DEV_VD */
-						   <94 &MAIN_PD>, /* OBSCLK0_MUX_SEL_DEV_VD */
-						   <95 &MAIN_PD>, /* USB0_ISO_VD */
-						   <96 &MAIN_PD>, /* USB1_ISO_VD */
-						   <97 &MAIN_PD>; /* CLK_32K_RC */
+						   <57 &WKUP_PD>; /* WKUP_I2C0 */
 			};
 		};
 	};
