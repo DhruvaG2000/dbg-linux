@@ -114,10 +114,26 @@
 
 		cluster_sleep_1: cluster-sleep-1 {
 			compatible = "domain-idle-state";
-			arm,psci-suspend-param = <0x02000020>; /* system state */
+			arm,psci-suspend-param = <0x01000020>; /* system state */
 			entry-latency-us = <5000>;
 			exit-latency-us = <5000>;
 			min-residency-us = <50000>;
+		};
+
+		main_sleep_0: main-sleep-0 {
+			compatible = "domain-idle-state";
+			arm,psci-suspend-param = <0x02000010>; /* system state */
+			entry-latency-us = <7000>;
+			exit-latency-us = <7000>;
+			min-residency-us = <70000>;
+		};
+
+		main_sleep_1: main-sleep-1 {
+			compatible = "domain-idle-state";
+			arm,psci-suspend-param = <0x02000020>; /* system state */
+			entry-latency-us = <9000>;
+			exit-latency-us = <9000>;
+			min-residency-us = <90000>;
 		};
 	};
 };
@@ -146,6 +162,7 @@
 
 	MAIN_PD: power-controller-main {
 		#power-domain-cells = <0>;
+		domain-idle-states = <&main_sleep_0>, <&main_sleep_1>;
 	};
 
 	WKUP_PD: power-controller-wkup {
