@@ -54,6 +54,7 @@
 		clock-names = "fck";
 		power-domains = <&scmi_pds 19>;
 		ti,timer-pwm;
+		ti,timer-alwon;
 	};
 
 	wkup_timer1: timer@2b110000 {
@@ -64,6 +65,7 @@
 		clock-names = "fck";
 		power-domains = <&scmi_pds 20>;
 		ti,timer-pwm;
+		ti,timer-alwon;
 	};
 
 	wkup_i2c0: i2c@2b200000 {
