@@ -15,11 +15,15 @@
 #include <linux/property.h>
 #include <linux/regmap.h>
 #include <linux/rtc.h>
+#include <linux/pm_wakeup.h>
 
+static struct wakeup_source *ws;
 /* Registers */
 #define REG_K3RTC_S_CNT_LSW		0x08
 #define REG_K3RTC_S_CNT_MSW		0x0c
 #define REG_K3RTC_COMP			0x10
+#define REG_K3RTC_OFF_ON_S_CNT_LSW	0x18
+#define REG_K3RTC_OFF_ON_S_CNT_MSW	0x1C
 #define REG_K3RTC_ON_OFF_S_CNT_LSW	0x20
 #define REG_K3RTC_ON_OFF_S_CNT_MSW	0x24
 #define REG_K3RTC_SCRATCH0		0x30
@@ -92,8 +96,8 @@ static const struct reg_field ti_rtc_reg_fields[] = {
 	[K3RTC_COMP] = REG_FIELD(REG_K3RTC_COMP, 0, 31),
 
 	/* We use on to off as alarm trigger */
-	[K3RTC_ALM_S_CNT_LSW] = REG_FIELD(REG_K3RTC_ON_OFF_S_CNT_LSW, 0, 31),
-	[K3RTC_ALM_S_CNT_MSW] = REG_FIELD(REG_K3RTC_ON_OFF_S_CNT_MSW, 0, 15),
+	[K3RTC_ALM_S_CNT_LSW] = REG_FIELD(REG_K3RTC_OFF_ON_S_CNT_LSW, 0, 31),
+	[K3RTC_ALM_S_CNT_MSW] = REG_FIELD(REG_K3RTC_OFF_ON_S_CNT_MSW, 0, 15),
 	[K3RTC_IRQ_STATUS_RAW] = REG_FIELD(REG_K3RTC_IRQSTATUS_RAW_SYS, 0, 0),
 	[K3RTC_IRQ_STATUS] = REG_FIELD(REG_K3RTC_IRQSTATUS_SYS, 0, 0),
 	[K3RTC_IRQ_ENABLE_SET] = REG_FIELD(REG_K3RTC_IRQENABLE_SET_SYS, 0, 0),
@@ -227,38 +231,38 @@ static int k3rtc_configure(struct device *dev)
 		}
 	}
 
-	/* Enable Shadow register sync on 32k clock boundary */
-	k3rtc_field_write(priv, K3RTC_O32K_OSC_DEP_EN, 0x1);
+	// /* Enable Shadow register sync on 32k clock boundary */
+	// k3rtc_field_write(priv, K3RTC_O32K_OSC_DEP_EN, 0x1);
 
-	/*
-	 * Wait at least clock sync time before proceeding further programming.
-	 * This ensures that the 32k based sync is active.
-	 */
-	usleep_range(priv->sync_timeout_us, priv->sync_timeout_us + 5);
+	// /*
+	//  * Wait at least clock sync time before proceeding further programming.
+	//  * This ensures that the 32k based sync is active.
+	//  */
+	// usleep_range(priv->sync_timeout_us, priv->sync_timeout_us + 5);
 
-	/* We need to ensure fence here to make sure sync here */
-	ret = k3rtc_fence(priv);
-	if (ret) {
-		dev_err(dev,
-			"Failed fence osc_dep enable(%d) - is 32k clk working?!\n", ret);
-		return ret;
-	}
+	// /* We need to ensure fence here to make sure sync here */
+	// ret = k3rtc_fence(priv);
+	// if (ret) {
+	// 	dev_err(dev,
+	// 		"Failed fence osc_dep enable(%d) - is 32k clk working?!\n", ret);
+	// 	return ret;
+	// }
 
-	/*
-	 * FMODE setting: Reading lower seconds will freeze value on higher
-	 * seconds. This also implies that we must *ALWAYS* read lower seconds
-	 * prior to reading higher seconds
-	 */
-	k3rtc_field_write(priv, K3RTC_CNT_FMODE, K3RTC_CNT_FMODE_S_CNT_VALUE);
+	// /*
+	//  * FMODE setting: Reading lower seconds will freeze value on higher
+	//  * seconds. This also implies that we must *ALWAYS* read lower seconds
+	//  * prior to reading higher seconds
+	//  */
+	// k3rtc_field_write(priv, K3RTC_CNT_FMODE, K3RTC_CNT_FMODE_S_CNT_VALUE);
 
-	/* Clear any spurious IRQ sources if any */
-	k3rtc_field_write(priv, K3RTC_IRQ_STATUS_ALT, 0x1);
-	k3rtc_field_write(priv, K3RTC_IRQ_STATUS, 0x1);
-	/* Disable all IRQs */
-	k3rtc_field_write(priv, K3RTC_IRQ_ENABLE_CLR_ALT, 0x1);
-	k3rtc_field_write(priv, K3RTC_IRQ_ENABLE_CLR, 0x1);
+	// /* Clear any spurious IRQ sources if any */
+	// k3rtc_field_write(priv, K3RTC_IRQ_STATUS_ALT, 0x1);
+	// k3rtc_field_write(priv, K3RTC_IRQ_STATUS, 0x1);
+	// /* Disable all IRQs */
+	// k3rtc_field_write(priv, K3RTC_IRQ_ENABLE_CLR_ALT, 0x1);
+	// k3rtc_field_write(priv, K3RTC_IRQ_ENABLE_CLR, 0x1);
 
-	/* And.. Let us Sync the writes in */
+	// /* And.. Let us Sync the writes in */
 	return k3rtc_fence(priv);
 }
 
@@ -303,7 +307,7 @@ static int ti_k3_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
 	if ((enabled && reg) || (!enabled && !reg))
 		return 0;
 
-	k3rtc_field_write(priv, offset, 0x1);
+	k3rtc_field_write(priv, offset, 0x2);
 
 	/*
 	 * Ensure the write sync is through - NOTE: it should be OK to have
@@ -317,7 +321,7 @@ static int ti_k3_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 {
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
 	u32 seconds_lo, seconds_hi;
-
+	printk("Read rtc alarm ");
 	seconds_lo = k3rtc_field_read(priv, K3RTC_ALM_S_CNT_LSW);
 	seconds_hi = k3rtc_field_read(priv, K3RTC_ALM_S_CNT_MSW);
 
@@ -335,6 +339,8 @@ static int ti_k3_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	int ret;
 
 	seconds = rtc_tm_to_time64(&alarm->time);
+
+	printk("Setting rtc alarm ");
 
 	k3rtc_field_write(priv, K3RTC_ALM_S_CNT_LSW, seconds);
 	k3rtc_field_write(priv, K3RTC_ALM_S_CNT_MSW, (seconds >> 32));
@@ -556,7 +562,6 @@ static int ti_k3_rtc_probe(struct platform_device *pdev)
 	struct ti_k3_rtc *priv;
 	void __iomem *rtc_base;
 	int ret;
-
 	priv = devm_kzalloc(dev, sizeof(struct ti_k3_rtc), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
@@ -630,6 +635,7 @@ MODULE_DEVICE_TABLE(of, ti_k3_rtc_of_match_table);
 static int __maybe_unused ti_k3_rtc_suspend(struct device *dev)
 {
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
+	printk("Suspend rtc driver ");
 
 	if (device_may_wakeup(dev))
 		return enable_irq_wake(priv->irq);
@@ -640,6 +646,7 @@ static int __maybe_unused ti_k3_rtc_suspend(struct device *dev)
 static int __maybe_unused ti_k3_rtc_resume(struct device *dev)
 {
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
+	printk("resume rtc driver ");
 
 	if (device_may_wakeup(dev))
 		disable_irq_wake(priv->irq);
