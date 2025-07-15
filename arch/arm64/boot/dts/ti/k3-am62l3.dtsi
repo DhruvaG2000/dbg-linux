@@ -20,10 +20,6 @@
 				core0 {
 					cpu = <&cpu0>;
 				};
-
-				core1 {
-					cpu = <&cpu1>;
-				};
 			};
 		};
 
@@ -39,23 +35,23 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
-			cpu-idle-states = <&CPU_SLEEP_0>;
+			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_MEM>;
 		};
 
-		cpu1: cpu@1 {
-			compatible = "arm,cortex-a53";
-			reg = <0x001>;
-			device_type = "cpu";
-			enable-method = "psci";
-			i-cache-size = <0x8000>;
-			i-cache-line-size = <64>;
-			i-cache-sets = <256>;
-			d-cache-size = <0x8000>;
-			d-cache-line-size = <64>;
-			d-cache-sets = <128>;
-			next-level-cache = <&l2_0>;
-			cpu-idle-states = <&CPU_SLEEP_0>;
-		};
+		/* cpu1: cpu@1 { */
+		/* 	compatible = "arm,cortex-a53"; */
+		/* 	reg = <0x001>; */
+		/* 	device_type = "cpu"; */
+		/* 	enable-method = "psci"; */
+		/* 	i-cache-size = <0x8000>; */
+		/* 	i-cache-line-size = <64>; */
+		/* 	i-cache-sets = <256>; */
+		/* 	d-cache-size = <0x8000>; */
+		/* 	d-cache-line-size = <64>; */
+		/* 	d-cache-sets = <128>; */
+		/* 	next-level-cache = <&l2_0>; */
+		/* 	cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_MEM>; */
+		/* }; */
 	};
 
 	l2_0: l2-cache0 {
@@ -78,6 +74,16 @@
 			entry-latency-us = <300>;
 			exit-latency-us = <600>;
 			min-residency-us = <1000>;
+		};
+
+		CPU_SLEEP_MEM: DEEP {
+			compatible = "arm,idle-state";
+			idle-state-name = "Deep";
+			arm,psci-suspend-param = <0x12333>;
+			local-timer-stop;
+			entry-latency-us = <3000000>;
+			exit-latency-us = <6000000>;
+			min-residency-us = <1000000>;
 		};
 	};
 };

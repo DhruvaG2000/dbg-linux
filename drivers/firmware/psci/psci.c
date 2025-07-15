@@ -466,11 +466,13 @@ static noinstr int psci_suspend_finisher(unsigned long state)
 	return psci_ops.cpu_suspend(power_state, pa_cpu_resume);
 }
 
+static volatile int idle_once = 0x1;
 int psci_cpu_suspend_enter(u32 state)
 {
 	int ret;
 
 	if (!psci_power_state_loses_context(state)) {
+		// printk("PSCI: %s", __func__);
 		struct arm_cpuidle_irq_context context;
 
 		ct_cpuidle_enter();
@@ -479,6 +481,10 @@ int psci_cpu_suspend_enter(u32 state)
 		arm_cpuidle_restore_irq_context(&context);
 		ct_cpuidle_exit();
 	} else {
+		printk("2.  PSCI: %s, idle_once = %d", __func__, idle_once);
+			dump_stack();
+			pm_wakeup_event(NULL, 0);
+			pm_system_wakeup();
 		/*
 		 * ARM64 cpu_suspend() wants to do ct_cpuidle_*() itself.
 		 */
@@ -489,8 +495,11 @@ int psci_cpu_suspend_enter(u32 state)
 
 		if (!IS_ENABLED(CONFIG_ARM64))
 			ct_cpuidle_exit();
+		printk("2.  PSCI out of idle: %s", __func__);
+		idle_once = 0x0;
 	}
 
+		// printk("3.  PSCI ret: %s , %d", __func__, ret);
 	return ret;
 }
 #endif
