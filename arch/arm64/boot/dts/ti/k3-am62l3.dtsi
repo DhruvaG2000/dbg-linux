@@ -35,6 +35,8 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
+/*			power-domains = <&CPU_PD0>;
+			power-domain-names = "psci"; */
 			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_MEM>;
 		};
 
@@ -84,6 +86,16 @@
 			exit-latency-us = <1000>;
 			min-residency-us = <5000>;
 			local-timer-stop;
+		};
+
+		CPU_SLEEP_MEM: MEM {
+			compatible = "arm,idle-state";
+			idle-state-name = "Deep";
+			arm,psci-suspend-param = <0x12333>;
+			local-timer-stop;
+			entry-latency-us = <3000000>;
+			exit-latency-us = <6000000>;
+			min-residency-us = <1000000>;
 		};
 	};
 
