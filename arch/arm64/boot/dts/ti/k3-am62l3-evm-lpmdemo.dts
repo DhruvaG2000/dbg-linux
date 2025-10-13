@@ -20,17 +20,6 @@
 		rtc0 = &wkup_rtc0;
 	};
 
-	wkup_rtc0: rtc@2b1f0000 {
-		compatible = "ti,am62-rtc";
-		reg = <0x00 0x2b1f0000 0x00 0x100>;
-		interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>;
-		interrupt-names = "wakeup";
-		clocks = <&scmi_clk 268>, <&scmi_clk 268>;
-		clock-names = "osc32k", "vbus";
-		power-domains = <&scmi_pds 59>;
-		wakeup-source;
-	};
-	
 	chosen {
 		stdout-path = &main_uart0;
 	};
