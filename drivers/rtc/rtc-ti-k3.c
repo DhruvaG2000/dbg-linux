@@ -17,6 +17,7 @@
 #include <linux/property.h>
 #include <linux/regmap.h>
 #include <linux/rtc.h>
+#include <linux/pm_wakeup.h>
 
 /* Registers */
 #define REG_K3RTC_S_CNT_LSW		0x08
@@ -832,6 +833,10 @@ static int ti_k3_rtc_probe(struct platform_device *pdev)
 	struct ti_k3_rtc *priv;
 	void __iomem *rtc_base;
 	int ret;
+	static struct wakeup_source *ws;
+
+	printk("dbg: %s", __func__);
+	ws = wakeup_source_register(NULL, "rtc_psci_idle_force_wake");
 
 	soc_data = device_get_match_data(&pdev->dev);
 	if (!soc_data) {
