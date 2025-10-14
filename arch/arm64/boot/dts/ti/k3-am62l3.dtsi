@@ -37,7 +37,7 @@
 			next-level-cache = <&l2_0>;
 /*			power-domains = <&CPU_PD0>;
 			power-domain-names = "psci"; */
-			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_MEM>;
+			cpu-idle-states = <&CPU_SLEEP_1>, <&CPU_SLEEP_MEM>;
 		};
 
 		/* cpu1: cpu@1 { */
@@ -81,21 +81,21 @@
 		CPU_SLEEP_1: DEEP {
 			compatible = "arm,idle-state";
 			idle-state-name = "DeepSleep";
-			arm,psci-suspend-param = <0x00000002>;
+			arm,psci-suspend-param = <0x13333>;
 			entry-latency-us = <1000>;
 			exit-latency-us = <1000>;
-			min-residency-us = <5000>;
+			min-residency-us = <5000000>;
 			local-timer-stop;
 		};
 
 		CPU_SLEEP_MEM: MEM {
 			compatible = "arm,idle-state";
-			idle-state-name = "Deep";
+			idle-state-name = "RTCDDR";
 			arm,psci-suspend-param = <0x12333>;
 			local-timer-stop;
 			entry-latency-us = <3000000>;
 			exit-latency-us = <6000000>;
-			min-residency-us = <1000000>;
+			min-residency-us = <10000000>;
 		};
 	};
 
