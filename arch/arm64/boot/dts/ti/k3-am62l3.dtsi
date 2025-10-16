@@ -35,9 +35,9 @@
 			d-cache-line-size = <64>;
 			d-cache-sets = <128>;
 			next-level-cache = <&l2_0>;
-/*			power-domains = <&CPU_PD0>;
-			power-domain-names = "psci"; */
-			cpu-idle-states = <&CPU_SLEEP_1>, <&CPU_SLEEP_MEM>;
+			power-domains = <&CPU_PD0>;
+			power-domain-names = "psci";
+/*			cpu-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_MEM>; */
 		};
 
 		/* cpu1: cpu@1 { */
@@ -81,24 +81,23 @@
 		CPU_SLEEP_1: DEEP {
 			compatible = "arm,idle-state";
 			idle-state-name = "DeepSleep";
-			arm,psci-suspend-param = <0x13333>;
+			arm,psci-suspend-param = <0x00000002>;
 			entry-latency-us = <1000>;
 			exit-latency-us = <1000>;
-			min-residency-us = <5000000>;
+			min-residency-us = <5000>;
 			local-timer-stop;
 		};
 
 		CPU_SLEEP_MEM: MEM {
 			compatible = "arm,idle-state";
-			idle-state-name = "RTCDDR";
+			idle-state-name = "Deep";
 			arm,psci-suspend-param = <0x12333>;
 			local-timer-stop;
 			entry-latency-us = <3000000>;
 			exit-latency-us = <6000000>;
-			min-residency-us = <10000000>;
+			min-residency-us = <1000000>;
 		};
 	};
-
 /*
  * psci-suspend-param bits:
  * From: PSCI spec, Table 7
@@ -129,6 +128,15 @@
 			local-timer-stop;
 		};
 
+		cluster_sleep_2: cluster-sleep-2 {
+			compatible = "domain-idle-state";
+			arm,psci-suspend-param = <0x12333>;
+			entry-latency-us = <300000>;
+			exit-latency-us = <600000>;
+			min-residency-us = <1000000>;
+			local-timer-stop;
+		};
+
 		main_sleep_0: main-sleep-0 {
 			compatible = "domain-idle-state";
 			arm,psci-suspend-param = <0x02000010>; /* system state */
@@ -140,10 +148,10 @@
 
 		main_sleep_1: main-sleep-1 {
 			compatible = "domain-idle-state";
-			arm,psci-suspend-param = <0x02000020>; /* system state */
-			entry-latency-us = <9000>;
-			exit-latency-us = <9000>;
-			min-residency-us = <90000>;
+			arm,psci-suspend-param = <0x12333>;
+			entry-latency-us = <300000>;
+			exit-latency-us = <600000>;
+			min-residency-us = <1000000>;
 			local-timer-stop;
 		};
 	};
@@ -156,7 +164,7 @@
 	CPU_PD0: power-controller-cpu0 {
 		#power-domain-cells = <0>;
 		power-domains = <&CLUSTER_PD>;
-		domain-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>;
+		domain-idle-states = <&CPU_SLEEP_0>, <&CPU_SLEEP_1>/* , <&CPU_SLEEP_MEM> */;
 	};
 
 	CPU_PD1: power-controller-cpu1 {
@@ -167,7 +175,7 @@
 
 	CLUSTER_PD: power-controller-cluster {
 		#power-domain-cells = <0>;
-		domain-idle-states = <&cluster_sleep_0>, <&cluster_sleep_1>;
+		domain-idle-states = <&cluster_sleep_0>, <&cluster_sleep_1>/*, <&cluster_sleep_2> */;
 		power-domains = <&MAIN_PD>;
 	};
 
