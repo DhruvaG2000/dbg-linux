@@ -833,10 +833,8 @@ static int ti_k3_rtc_probe(struct platform_device *pdev)
 	struct ti_k3_rtc *priv;
 	void __iomem *rtc_base;
 	int ret;
-	static struct wakeup_source *ws;
 
 	printk("dbg: %s", __func__);
-	ws = wakeup_source_register(NULL, "rtc_psci_idle_force_wake");
 
 	soc_data = device_get_match_data(&pdev->dev);
 	if (!soc_data) {
@@ -972,7 +970,7 @@ static int __maybe_unused ti_k3_rtc_suspend(struct device *dev)
 		}
 	}
 
-	dev_dbg(dev, "suspend complete\n");
+	dev_info(dev, "suspend complete\n");
 
 	if (device_may_wakeup(dev))
 		return enable_irq_wake(priv->irq);
@@ -1086,7 +1084,7 @@ static int __maybe_unused ti_k3_rtc_resume(struct device *dev)
 			}
 	}
 
-	dev_dbg(dev, "Resume complete\n");
+	dev_info(dev, "Resume complete\n");
 
 	if (device_may_wakeup(dev))
 		disable_irq_wake(priv->irq);
