@@ -500,7 +500,8 @@ static ssize_t cpu_wakeup_latency_qos_write(struct file *filp,
 
 static const struct file_operations cpu_wakeup_latency_qos_fops = {
 	.open = cpu_wakeup_latency_qos_open,
-	.release = cpu_wakeup_latency_qos_release,
+	// comment out release so that we can echo the constraint from userspace
+	// .release = cpu_wakeup_latency_qos_release,
 	.read = cpu_wakeup_latency_qos_read,
 	.write = cpu_wakeup_latency_qos_write,
 	.llseek = noop_llseek,
