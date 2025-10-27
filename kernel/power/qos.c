@@ -246,19 +246,6 @@ static int system_wakeup_latency_qos_open(struct inode *inode,
 	return 0;
 }
 
-static int system_wakeup_latency_qos_release(struct inode *inode,
-					     struct file *filp)
-{
-	struct pm_qos_request *req = filp->private_data;
-
-	filp->private_data = NULL;
-	pm_qos_update_target(req->qos, &req->node, PM_QOS_REMOVE_REQ,
-			     PM_QOS_RESUME_LATENCY_NO_CONSTRAINT);
-	kfree(req);
-
-	return 0;
-}
-
 static ssize_t system_wakeup_latency_qos_read(struct file *filp,
 					      char __user *buf,
 					      size_t count,
@@ -297,7 +284,6 @@ static ssize_t system_wakeup_latency_qos_write(struct file *filp,
 
 static const struct file_operations system_wakeup_latency_qos_fops = {
 	.open = system_wakeup_latency_qos_open,
-	.release = system_wakeup_latency_qos_release,
 	.read = system_wakeup_latency_qos_read,
 	.write = system_wakeup_latency_qos_write,
 	.llseek = noop_llseek,
