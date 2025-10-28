@@ -21,6 +21,30 @@
 		stdout-path = &main_uart0;
 	};
 
+	idle-states {
+		entry-method = "psci";
+
+		CPU_SLEEP_DEEP: DEEP {
+			compatible = "arm,idle-state";
+			idle-state-name = "DeepSleep";
+			arm,psci-suspend-param = <0x13333>;
+			entry-latency-us = <1000>;
+			exit-latency-us = <1000>;
+			min-residency-us = <500000>;
+			local-timer-stop;
+		};
+
+		CPU_SLEEP_RTCDDR: RTCDDR {
+			compatible = "arm,idle-state";
+			idle-state-name = "RTCDDR";
+			arm,psci-suspend-param = <0x12333>;
+			local-timer-stop;
+			entry-latency-us = <3000000>;
+			exit-latency-us = <6000000>;
+			min-residency-us = <1000000>;
+		};
+	};
+
 	memory@80000000 {
 		/* 2G RAM */
 		reg = <0x00000000 0x80000000 0x00000000 0x80000000>;
@@ -256,6 +280,16 @@
 	pinctrl-0 = <&main_mmc1_pins_default>;
 	status = "okay";
 	bootph-all;
+};
+
+&cpu0 {
+	cpu-idle-states = <&CPU_SLEEP_DEEP>, <&CPU_SLEEP_RTCDDR>;
+};
+
+/delete-node/ &cpu1;
+
+&cluster0 {
+	/delete-node/ core1;
 };
 
 /delete-node/ &main_rti1;
