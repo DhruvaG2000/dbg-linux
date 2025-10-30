@@ -54,16 +54,6 @@
 						   <18 &MAIN_PD>, /* TIMER3 */
 						   <19 &WKUP_PD>, /* WKUP_TIMER0 */
 						   <20 &WKUP_PD>, /* WKUP_TIMER1 */
-						   <26 &MAIN_PD>, /* MMCSD1 */
-						   <27 &MAIN_PD>, /* MMCSD2 */
-						   <28 &MAIN_PD>, /* MMCSD0 */
-						   <34 &MAIN_PD>, /* GPIO0 */
-						   <35 &MAIN_PD>, /* GPIO2 */
-						   <36 &WKUP_PD>, /* WKUP_GPIO0 */
-						   <53 &MAIN_PD>, /* I2C0 */
-						   <54 &MAIN_PD>, /* I2C1 */
-						   <55 &MAIN_PD>, /* I2C2 */
-						   <56 &MAIN_PD>, /* I2C3 */
 						   <57 &WKUP_PD>; /* WKUP_I2C0 */
 			};
 		};
