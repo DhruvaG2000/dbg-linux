@@ -30,6 +30,7 @@
 #include <linux/err.h>
 #include <linux/init.h>
 #include <linux/pm_runtime.h>
+#include <linux/pm_qos.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
@@ -1469,6 +1470,8 @@ static int omap_dm_timer_probe(struct platform_device *pdev)
 	spin_lock_irqsave(&dm_timer_lock, flags);
 	list_add_tail(&timer->node, &omap_timer_list);
 	spin_unlock_irqrestore(&dm_timer_lock, flags);
+
+	dev_pm_qos_expose_latency_limit(dev, PM_QOS_RESUME_LATENCY_NO_CONSTRAINT);
 
 	dev_dbg(dev, "Device Probed.\n");
 
