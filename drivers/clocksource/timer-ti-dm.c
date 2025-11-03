@@ -28,6 +28,7 @@
 #include <linux/io.h>
 #include <linux/device.h>
 #include <linux/err.h>
+#include <linux/init.h>
 #include <linux/pm_runtime.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
@@ -168,6 +169,7 @@ struct omap_dm_timer_clockevent {
 
 static resource_size_t omap_dm_timer_clocksource_base;
 static resource_size_t omap_dm_timer_clockevent_base;
+static bool sched_clock_initialized;
 static void __iomem *omap_dm_timer_sched_clock_counter;
 
 enum {
@@ -1170,6 +1172,30 @@ static void omap_dm_timer_clocksource_resume(struct clocksource *cs)
 	dmtimer_write(timer, OMAP_TIMER_CTRL_REG, OMAP_TIMER_CTRL_ST | OMAP_TIMER_CTRL_AR);
 }
 
+/* Globals needed for deferred sched_clock initialization */
+static u32 omap_dm_timer_sched_clock_rate;
+
+/*
+ * Called at init time only - safe to use __init functions here
+ */
+static int __init omap_dm_timer_init_sched_clock(void)
+{
+	/* Only register the sched clock if we have a valid counter pointer */
+	if (omap_dm_timer_sched_clock_counter && omap_dm_timer_sched_clock_rate) {
+		sched_clock_register(omap_dm_timer_read_sched_clock, 32,
+				     omap_dm_timer_sched_clock_rate);
+		sched_clock_initialized = true;
+	} else {
+		pr_warn("%s: timer not probed yet, sched_clock not registered\n",
+			__func__);
+	}
+	return 0;
+}
+/* Call this after most drivers have initialized, but before late_initcall */
+fs_initcall(omap_dm_timer_init_sched_clock);
+
+
+/* Setup clocksource */
 static int omap_dm_timer_setup_clocksource(struct dmtimer *timer)
 {
 	struct device *dev = &timer->pdev->dev;
@@ -1198,9 +1224,6 @@ static int omap_dm_timer_setup_clocksource(struct dmtimer *timer)
 	dmtimer_write(timer, OMAP_TIMER_COUNTER_REG, 0);
 	dmtimer_write(timer, OMAP_TIMER_LOAD_REG, 0);
 	dmtimer_write(timer, OMAP_TIMER_CTRL_REG, OMAP_TIMER_CTRL_ST | OMAP_TIMER_CTRL_AR);
-
-	omap_dm_timer_sched_clock_counter = timer->func_base + _OMAP_TIMER_COUNTER_OFFSET;
-	sched_clock_register(omap_dm_timer_read_sched_clock, 32, timer->fclk_rate);
 
 	err = clocksource_register_hz(&clksrc->dev, timer->fclk_rate);
 	if (err)
@@ -1408,6 +1431,18 @@ static int omap_dm_timer_probe(struct platform_device *pdev)
 	if (omap_dm_timer_clocksource_base && res &&
 	    res->start == omap_dm_timer_clocksource_base &&
 	    !IS_ERR_OR_NULL(timer->fclk)) {
+		/*
+		 * Just set up the global variables needed for sched_clock,
+		 * the actual registration with sched_clock_register happens in
+		 * omap_dm_timer_init_sched_clock via fs_initcall
+		 */
+		omap_dm_timer_sched_clock_counter = timer->func_base + _OMAP_TIMER_COUNTER_OFFSET;
+		omap_dm_timer_sched_clock_rate = timer->fclk_rate;
+
+		if (sched_clock_initialized)
+			dev_warn(dev, "%s: timer probed after sched_clock already initialized\n",
+				 __func__);
+
 		ret = omap_dm_timer_setup_clocksource(timer);
 		if (ret)
 			return ret;
