@@ -106,6 +106,27 @@
 		interrupts = <GIC_PPI 7 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
+	memorycontroller: memorycontroller@2980000 {
+		compatible = "ti,j7-ddrss";
+		reg = <0x00 0x02980000 0x00 0x184>;
+		reg-names = "ss_cfg";
+		ranges = <0x00 0x02990000 0x00 0x02990000 0x00 0x00004000>; // DDR0 cfg
+		interrupts = <GIC_SPI 216 IRQ_TYPE_LEVEL_HIGH>;
+		power-domains = <&k3_pds 8 TI_SCI_PD_SHARED>,
+				<&k3_pds 90 TI_SCI_PD_SHARED>;
+		clocks = <&k3_clks 8 5>, <&k3_clks 30 9>;
+		#address-cells = <2>;
+		#size-cells = <2>;
+
+		lpddr4@2990000 {
+			compatible = "cdns,lpddr4";
+			reg = <0x00 0x02990000 0x00 0x72C>,
+			      <0x00 0x02992000 0x00 0x4B0>,
+			      <0x00 0x02994000 0x00 0x163C>;
+			reg-names = "ctl_cfg", "ctl_cfg_pi", "ctl_cfg_phy";
+		};
+	};
+
 	cbass_main: bus@100000 {
 		compatible = "simple-bus";
 		#address-cells = <2>;
