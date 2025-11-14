@@ -449,7 +449,7 @@ static bool cpu_system_power_down_ok(struct dev_pm_domain *pd)
 		if (min_dev_latency_ns < constraint_ns)
 			dev_info(&genpd->dev, "updating constraint: %llu -> %llu\n",
 				 constraint_ns, min_dev_latency_ns);
-			constraint_ns = min_dev_latency_ns;
+		constraint_ns = min_dev_latency_ns;
 	}
 
 	/* Find the deepest state for the latency constraint. */
