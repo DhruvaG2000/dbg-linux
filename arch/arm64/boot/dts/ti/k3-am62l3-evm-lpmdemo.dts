@@ -20,12 +20,22 @@
 			exit-latency-us = <600>;
 			min-residency-us = <1000>;
 		};
+		CLST_LOST: LOST {
+			compatible = "arm,idle-state";
+			/* arm,psci-suspend-param = <0x2012233>; */
+			arm,psci-suspend-param = <0x2>;
+			entry-latency-us = <10000>;
+			exit-latency-us = <1000>;
+			min-residency-us = <500000>;
+			local-timer-stop;
+		};
 	};
 
 	domain-idle-states {
 		main_sleep_0: main-deep-sleep {
 			compatible = "domain-idle-state";
-			arm,psci-suspend-param = <0x2012231>;
+			/* arm,psci-suspend-param = <0x2012231>; */
+			arm,psci-suspend-param = <0x3>;
 			entry-latency-us = <1000>;
 			exit-latency-us = <1000>;
 			min-residency-us = <500000>;
@@ -34,7 +44,8 @@
 
 		main_sleep_1: main-sleep-rtcddr {
 			compatible = "domain-idle-state";
-			arm,psci-suspend-param = <0x2012232>;
+			/* arm,psci-suspend-param = <0x2012232>; */
+			arm,psci-suspend-param = <0x4>;
 			local-timer-stop;
 			entry-latency-us = <300000>;
 			exit-latency-us = <600000>;
@@ -56,6 +67,11 @@
 			   <18 &MAIN_PD>; /* TIMER3 */
 };
 
+&cpu1 {
+	power-domains = <&CLUSTER_PD>;
+	power-domain-names = "psci";
+};
+
 &cpu0 {
 	power-domains = <&CLUSTER_PD>;
 	power-domain-names = "psci";
@@ -64,7 +80,7 @@
 &psci {
 	CLUSTER_PD: power-controller-cluster {
 		#power-domain-cells = <0>;
-		domain-idle-states = <&CLST_STBY>;
+		domain-idle-states = <&CLST_LOST>;
 		power-domains = <&MAIN_PD>;
 	};
 
@@ -74,10 +90,10 @@
 	};
 };
 
-/delete-node/ &cpu1;
-
-&cluster0 {
-	/delete-node/ core1;
-};
+/* /delete-node/ &cpu1; */
+/**/
+/* &cluster0 { */
+/* 	/delete-node/ core1; */
+/* }; */
 
 /delete-node/ &main_rti1;
