@@ -90,3 +90,51 @@ To trace this coordination, follow this sequence of events:
 | 9 | CPU 1 | `psci_set_domain_state` | `cpuidle-psci.c` | Writes composite state to per-cpu `domain_state`. |
 | 10 | CPU 1 | `psci_enter_domain_idle_state` | `cpuidle-psci.c` | Reads `domain_state` (now contains Cluster Off bits). |
 | 11 | CPU 1 | `psci_cpu_suspend_enter` | `psci.c` | Calls PSCI firmware with Cluster Off request. |
+
+---
+
+### **Race Condition and Firmware Arbitration**
+
+In the scenario where CPU 0 wakes up from WFI when the kernel is doing the CPU 1 `cpu_suspend` call for an overall domain idle, **nobody in the Linux kernel ensures that CPU 0 stays idle**. CPU 0 is free to wake up at any microsecond due to an interrupt.
+
+When this race happens, **the PSCI Firmware** is the safety net that prevents the system from crashing or entering an invalid state.
+
+#### **The Race Condition (The "Stale State" Problem)**
+
+In the Linux kernel, the decision to power off the domain (Cluster) and the actual execution of that command are separated by a small window of time.
+
+1.  **The Decision (CPU 1):**
+    *   CPU 1 (Last Man) calls `pm_runtime_put_sync_suspend`.
+    *   Linux GenPD checks locks and counters: "CPU 0 is suspended. CPU 1 is suspending. Count is 0."
+    *   GenPD decides: **Domain Off**.
+    *   It calls `psci_pd_power_off`, which sets CPU 1's target state to `CLUSTER_OFF`.
+    *   *The GenPD function returns.* (The software lock is released).
+
+2.  **The Race Window:**
+    *   CPU 1 is now preparing the SMC arguments to call the firmware.
+    *   **Event:** An interrupt fires for **CPU 0**.
+    *   CPU 0 immediately wakes up from its `WFI` instruction.
+    *   CPU 0 calls `pm_runtime_get_sync` to mark itself as active. Linux GenPD updates its bookkeeping to say "Domain is ON".
+
+3.  **The Execution (CPU 1):**
+    *   CPU 1 executes `SMC` with the `CLUSTER_OFF` parameter.
+    *   *Crucial Point:* CPU 1 is executing this command based on the decision made in Step 1, which is now **stale/invalid** because of Step 2.
+
+#### **The Resolution: Firmware Arbitration**
+
+Because Linux cannot stop hardware interrupts from waking other cores while it prepares a command, the **PSCI Firmware** acts as the final arbiter.
+
+When the firmware receives the `CPU_SUSPEND` call from CPU 1 requesting `CLUSTER_OFF`:
+
+1.  **Check Affinity:** The firmware looks at its own internal state bits for all CPUs in that cluster.
+2.  **Detect Conflict:** It sees that CPU 1 requested `CLUSTER_OFF`, but **CPU 0 is technically ON** (or in the process of waking up).
+3.  **Demote Request:** The firmware **denies** the Cluster-level power off.
+    *   It accepts the request but *demotes* it to a lower level (e.g., just `CPU_OFF` or `WFI` for CPU 1).
+    *   It keeps the Cluster power rail ON.
+4.  **Return Success:** The firmware returns `PSCI_SUCCESS` (0) to CPU 1.
+
+#### **Why doesn't Linux treat this as an error?**
+From CPU 1's perspective, nothing went wrong. It asked to sleep, and it went to sleep. It doesn't know (and doesn't care) that the Cluster stayed on.
+*   **CPU 1's view:** "I went to sleep."
+*   **CPU 0's view:** "I woke up and processed my interrupt."
+*   **System view:** The cluster stayed powered on, consuming slightly more power than intended for that brief moment, but functionality was preserved.

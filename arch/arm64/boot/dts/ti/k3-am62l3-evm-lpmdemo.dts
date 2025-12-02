@@ -32,10 +32,21 @@
 			exit-latency-us = <600>;
 			min-residency-us = <1000>;
 		};
+		CPU_PDOWN: CPUPDOWN {
+			compatible = "arm,idle-state";
+			/* arm,psci-suspend-param = <0x2012233>; */
+			arm,psci-suspend-param = <0x012233>;
+			/* arm,psci-suspend-param = <0x00001>; */
+			entry-latency-us = <10000>;
+			exit-latency-us = <10000>;
+			min-residency-us = <500000>;
+			local-timer-stop;
+		};
 		CLST_LOST: LOST {
 			compatible = "arm,idle-state";
 			/* arm,psci-suspend-param = <0x2012233>; */
-			arm,psci-suspend-param = <0x2>;
+			arm,psci-suspend-param = <0x1012233>;
+			/* arm,psci-suspend-param = <0x00001>; */
 			entry-latency-us = <10000>;
 			exit-latency-us = <1000>;
 			min-residency-us = <500000>;
@@ -46,8 +57,8 @@
 	domain-idle-states {
 		main_sleep_0: main-deep-sleep {
 			compatible = "domain-idle-state";
-			/* arm,psci-suspend-param = <0x2012231>; */
-			arm,psci-suspend-param = <0x3>;
+			arm,psci-suspend-param = <0x2012235>;
+			/* arm,psci-suspend-param = <0x3>; */
 			entry-latency-us = <1000>;
 			exit-latency-us = <1000>;
 			min-residency-us = <500000>;
@@ -56,8 +67,8 @@
 
 		main_sleep_1: main-sleep-rtcddr {
 			compatible = "domain-idle-state";
-			/* arm,psci-suspend-param = <0x2012232>; */
-			arm,psci-suspend-param = <0x4>;
+			arm,psci-suspend-param = <0x2012234>;
+			/* arm,psci-suspend-param = <0x1000001>; */
 			local-timer-stop;
 			entry-latency-us = <300000>;
 			exit-latency-us = <600000>;
@@ -315,16 +326,21 @@
 };
 
 &cpu1 {
-	power-domains = <&CLUSTER_PD>;
 	power-domain-names = "psci";
+	power-domains = <&CPU_PD>;
 };
 
 &cpu0 {
-	power-domains = <&CLUSTER_PD>;
+	power-domains = <&CPU_PD>;
 	power-domain-names = "psci";
 };
 
 &psci {
+	CPU_PD: power-controller-cpu {
+		#power-domain-cells = <0>;
+		power-domains = <&CLUSTER_PD>;
+		domain-idle-states = <&CPU_PDOWN>;
+	};
 	CLUSTER_PD: power-controller-cluster {
 		#power-domain-cells = <0>;
 		domain-idle-states = <&CLST_LOST>;
