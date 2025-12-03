@@ -1,0 +1,62 @@
+[   29.488671] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+[   29.506861] dbg: ti_k3_rtc_suspend
+I[   29.510427]
+[   29.510427] S2IDLE_DBG: cpu_idle_enter: cpu = 0, state = 0x12233, ret = 0, need_resched = 0
+NFO[   29.510427]
+[   29.510427] S2IDLE_DBG: cpu_idle_enter: cpu = 1, state = 0x2012234, ret = 0, need_resched = 0
+sI N F O k:3 _  v aldibgd:a taem_p6o2wle_rp_wsrt_adtoem:a in(_csoures pe1n)d:
+ 2idle: power_state: 0x2012234
+INFO:    dbg: am62l_pwr_domain_suspend
+INFO:
+am62l_pwr_domain_suspend: A53 CORE: 1 suspend
+FNFO:   I NamF6O:2 l _ p wSrt_daortmaeidn _Sousfpfe_wnfdi :S eAq5u3e nCcOeR Ei:n  A1T FOF
+
+mNFO:    set_mainI_NpFsOc_: s t at se:e nbte fporreep:a rmed m_ieds=sa41ge,
+eIdsNFtOa:t = 0 x1 1sfe0n3t, e npdtestr atsl=e0xep3 0m1
+ ssage
+INFO:    !!DHG Suspend Sequence in ATF core(0)
+INFO:    k3_lpm_jump_to_stub x707f1000
+NOTICE:  bl1_plat_arch_setup arch setup
+NOTICE:  Booting Trusted Firmware
+NOTICE:  BL1: v2.12.0(release):11.02.01-20-g8ce90ccb8713
+NOTICE:  BL1: Built : 12:02:25, Nov 24 2025
+INFO:    BL1: RAM 0x7080b000 - 0x7080f000
+INFO:    lpddr4_init <--
+INFO:    lpddr4 dtb: ctl-data ptr=0x7080718c, pi-data=0x70807834, phy-data=0x70807da4
+NOTICE:  BL1: dram_class: 11
+INFO:    memory node =0x28
+INFO:    lpddr4: probe done
+INFO:    lpddr4/ddr4: init done
+INFO:    start-status: offset =0x0
+INFO:    start-status reg: before =0x10460b00
+INFO:    Exiting RTC only + DDRINFO:    lpddr4: Start DDR controller
+INFO:    k3_lpddr4_freq_update DDR Freq change complete
+INFO:    lpddr4: start completed successfully status=0x0
+INFO:    start-status reg: after =0x10460b01
+INFO:    LPDDR4 start completed !!
+NOTICE:  lpddr4: post start - PI training status=0x27c0a000
+INFO:    lpddr4: post start - CTL Interrupt status=0x1000000
+NOTICE:  bl1_platform_setup DDR init W-֮CINFO:    !!DHG resume Sequence in ATF core(0)
+ERROR:   Wake up src 0x0
+INFO:    ti_clk_and_dev_init started!
+INFO:    stub copy 0x707f0000  0x80041000  0x707f6528
+INFO:    set_main_psc_state: before: md_id=41, mdstat=0xa00, pdstat=0x200
+INFO:    set_main_psc_state: after: md_id=41, mdstat=0x11f03, pdstat=0x301
+[   29.510427] S2IDLE_DBG: CPU0 in __cpu_suspend_exit, need_resched=0
+INF[   29.510427]
+[   29.510427] S2IDLE_DBG: cpu_idle_exit: cpu = 0, state = 0x12233, ret = 1, need_resched = 0
+O:  [   29.510445] S2IDLE_DBG: s2idle_wake() called on CPU0
+  !![   29.515728] S2IDLE_DBG: changing s2idle_state from 1 to S2IDLE_STATE_WAKE
+DH[   29.522675] S2IDLE_DBG: s2idle_wake() completed
+G [   29.527408] S2IDLE_DBG: CPU0 entering do_idle() with s2idle_state=WAKE, need_resched=0
+cp[   29.535450] S2IDLE_DBG: CPU0 still in do_idle() loop with s2idle_state=WAKE, need_resched=0
+u(1) res
+I[   29.544734] S2IDLE_DBG: CPU0 still in do_idle() loop with s2idle_state=WAKE, need_resched=0
+NFO:    !!DHG GIC stuff
+[   29.555267] S2IDLE_DBG: CPU0 still in do_idle() loop with s2idle_state=WAKE, need_resched=0
+[   29.555279] S2IDLE_DBG: CPU1 in __cpu_suspend_exit, need_resched=0
+[   29.564083] S2IDLE_DBG: CPU0 entering do_idle() with s2idle_state=WAKE, need_resched=0
+[   29.569829]
+[   29.569829] S2IDLE_DBG: cpu_idle_exit: cpu = 1, state = 0x2012234, ret = 1, need_resched = 0
+[   29.569859] S2IDLE_DBG: CPU1 still in do_idle() loop with s2idle_state=WAKE, need_resched=0
+

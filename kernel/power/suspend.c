@@ -105,12 +105,18 @@ static void s2idle_enter(void)
 	/* Make the current CPU wait so it can enter the idle loop too. */
 	swait_event_exclusive(s2idle_wait_head,
 		    s2idle_state == S2IDLE_STATE_WAKE);
+	printk("S2IDLE_DBG: CPU%d woken from swait_event_exclusive, s2idle_state=%d\n",
+	       smp_processor_id(), s2idle_state);
 
 	/*
 	 * Kick all CPUs to ensure that they resume their timers and restore
 	 * consistent system state.
 	 */
+	printk("S2IDLE_DBG: CPU%d about to send wake IPI to all CPUs, s2idle_state=%d\n",
+	       smp_processor_id(), s2idle_state);
 	wake_up_all_idle_cpus();
+	printk("S2IDLE_DBG: CPU%d completed wake IPI to all CPUs, need_resched=%d\n",
+	       smp_processor_id(), need_resched());
 
 	cpus_read_unlock();
 
@@ -157,12 +163,17 @@ void s2idle_wake(void)
 {
 	unsigned long flags;
 
+	printk("S2IDLE_DBG: s2idle_wake() called on CPU%d\n", smp_processor_id());
+
 	raw_spin_lock_irqsave(&s2idle_lock, flags);
 	if (s2idle_state > S2IDLE_STATE_NONE) {
+		printk("S2IDLE_DBG: changing s2idle_state from %d to S2IDLE_STATE_WAKE\n", s2idle_state);
 		s2idle_state = S2IDLE_STATE_WAKE;
 		swake_up_one(&s2idle_wait_head);
 	}
 	raw_spin_unlock_irqrestore(&s2idle_lock, flags);
+
+	printk("S2IDLE_DBG: s2idle_wake() completed\n");
 }
 EXPORT_SYMBOL_GPL(s2idle_wake);
 

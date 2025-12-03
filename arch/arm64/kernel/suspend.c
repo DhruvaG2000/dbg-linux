@@ -45,6 +45,9 @@ void notrace __cpu_suspend_exit(void)
 {
 	unsigned int cpu = smp_processor_id();
 
+	printk("S2IDLE_DBG: CPU%d in __cpu_suspend_exit, need_resched=%d\n",
+	       cpu, need_resched());
+
 	mte_suspend_exit();
 
 	/*

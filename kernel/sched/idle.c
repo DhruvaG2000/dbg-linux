@@ -255,6 +255,11 @@ static void do_idle(void)
 {
 	int cpu = smp_processor_id();
 
+	if (s2idle_state == S2IDLE_STATE_WAKE) {
+		printk("S2IDLE_DBG: CPU%d entering do_idle() with s2idle_state=WAKE, need_resched=%d\n",
+		       cpu, need_resched());
+	}
+
 	/*
 	 * Check if we need to update blocked load
 	 */
@@ -273,6 +278,10 @@ static void do_idle(void)
 	tick_nohz_idle_enter();
 
 	while (!need_resched()) {
+		if (s2idle_state == S2IDLE_STATE_WAKE) {
+			printk("S2IDLE_DBG: CPU%d still in do_idle() loop with s2idle_state=WAKE, need_resched=%d\n",
+			      cpu, need_resched());
+		}
 		rmb();
 
 		/*

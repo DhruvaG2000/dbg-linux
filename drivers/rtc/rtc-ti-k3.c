@@ -532,6 +532,7 @@ static irqreturn_t ti_k3_rtc_interrupt(s32 irq, void *dev_id)
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
 	u32 reg, temp;
 	int ret;
+	printk("dbg: %s", __func__);
 
 	/*
 	 * IRQ assertion can be very fast, however, the IRQ Status clear
@@ -932,6 +933,7 @@ static int __maybe_unused ti_k3_rtc_suspend(struct device *dev)
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
 	int ret;
 	u32 temp;
+	printk("dbg: %s", __func__);
 
 	if (priv->has_analog_block) {
 		guard(mutex)(&priv->mutex_lock);
@@ -977,6 +979,7 @@ static int __maybe_unused ti_k3_rtc_suspend(struct device *dev)
 
 static int __maybe_unused ti_k3_rtc_resume(struct device *dev)
 {
+	printk("dbg: %s", __func__);
 	struct ti_k3_rtc *priv = dev_get_drvdata(dev);
 	u32 temp;
 	int ret;
