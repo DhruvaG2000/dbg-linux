@@ -36,6 +36,21 @@
 		bootph-all;
 	};
 
+	reserved_memory: reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		
+		/*
+		 * TODO: before upstreaming we need to think of some way to make
+		 * this location not have to be statically set in DT.
+		 */
+		lpm_ctx_addr: lpm-ctx@81a00000  {
+			reg = <0x00 0x81a00000 0x00 0x4000>;
+			no-map;
+		};
+	};
+
 	rtc_gpio0 {
 		compatible = "gpio-keys";
 		button-rtc0 {
