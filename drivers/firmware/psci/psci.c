@@ -100,6 +100,56 @@ static inline bool psci_power_state_loses_context(u32 state)
 	return state & mask;
 }
 
+/**
+ * psci_power_state_system_context_loss - check for system-level context loss
+ * @state: PSCI power state value
+ *
+ * Returns true if @state will cause system-wide context loss — meaning the
+ * power domain that loses context encompasses shared system resources such as
+ * the GIC distributor, system timers, and interconnect configuration.
+ *
+ * In standard PSCI 0.2 power state encoding, this corresponds to an AffLevel
+ * value of 2 or higher (bits [25:24]) combined with a powerdown StateType
+ * (bit [16] = 1).  For example, on AM62L the "main_sleep_deep" domain idle
+ * state (0x2012235) has AffLevel=2 and StateType=1.
+ *
+ * In extended PSCI 1.0 power state encoding there is no affinity-level field;
+ * any context-loss state (bit [30] = 1) is conservatively treated as
+ * system-level.
+ *
+ * This predicate is used by the cpuidle PSCI driver to decide whether
+ * syscore_suspend()/syscore_resume() must be called within the s2idle cpuidle
+ * path to save/restore system-wide state that would otherwise be skipped.
+ */
+bool psci_power_state_system_context_loss(u32 state)
+{
+	u32 affl;
+
+	if (!psci_power_state_loses_context(state))
+		return false;
+
+	if (psci_has_ext_power_state()) {
+		/*
+		 * Extended PSCI 1.0 power state format has no affinity-level
+		 * field.  Treat any context-loss state as potentially
+		 * system-level to be safe.
+		 */
+		return true;
+	}
+
+	/*
+	 * Standard PSCI 0.2 format: bits [25:24] encode the deepest affected
+	 * affinity level:
+	 *   0 = CPU core   (only CPU registers lost)
+	 *   1 = Cluster    (cluster-level caches/coherency lost)
+	 *   2 = System     (GIC distributor, timers, interconnect lost)
+	 */
+	affl = (state & PSCI_0_2_POWER_STATE_AFFL_MASK) >>
+	       PSCI_0_2_POWER_STATE_AFFL_SHIFT;
+	return affl >= 2;
+}
+EXPORT_SYMBOL_GPL(psci_power_state_system_context_loss);
+
 bool psci_power_state_is_valid(u32 state)
 {
 	const u32 valid_mask = psci_has_ext_power_state() ?
