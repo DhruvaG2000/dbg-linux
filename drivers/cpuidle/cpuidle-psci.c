@@ -45,6 +45,22 @@ struct psci_cpuidle_domain_state {
 static DEFINE_PER_CPU_READ_MOSTLY(struct psci_cpuidle_data, psci_cpuidle_data);
 static DEFINE_PER_CPU(struct psci_cpuidle_domain_state, psci_domain_state);
 static bool psci_cpuidle_use_syscore;
+/*
+ * Set to true while the s2idle syscore suspend/resume sequence is in flight.
+ * Guards psci_idle_syscore_switch() from calling dev_pm_genpd_suspend/resume()
+ * for the CPU genpd devices — those are already managed by
+ * dev_pm_genpd_suspend/resume() in __psci_enter_domain_idle_state().
+ */
+static bool psci_s2idle_syscore_skip;
+/*
+ * Non-zero when syscore_suspend() was called from the s2idle cpuidle path and
+ * a matching syscore_resume() is still pending.  The first CPU to return from
+ * psci_cpu_suspend_enter() atomically claims this and calls syscore_resume(),
+ * ensuring system-wide state (GIC distributor, ITS, timekeeping, …) is
+ * restored before any CPU tries to use those resources — regardless of which
+ * CPU happens to wake first.
+ */
+static atomic_t psci_s2idle_syscore_pending = ATOMIC_INIT(0);
 
 void psci_set_domain_state(struct generic_pm_domain *pd, unsigned int state_idx,
 			   u32 state)
@@ -86,9 +102,47 @@ static __cpuidle int __psci_enter_domain_idle_state(struct cpuidle_device *dev,
 	if (ds->state)
 		state = ds->state;
 
+	/*
+	 * For s2idle, the normal syscore_suspend/resume sequence is never
+	 * invoked.  If the resolved domain state causes system-level context
+	 * loss (AffLevel >= 2 in standard PSCI encoding — e.g., AM62L
+	 * "main_sleep_deep" 0x2012235 which powers off the entire MAIN domain
+	 * including the GIC distributor and system timers), call
+	 * syscore_suspend/resume here to perform the same save/restore
+	 * operations that the deep-sleep path would perform.
+	 *
+	 * psci_s2idle_syscore_skip is set so that psci_idle_syscore_switch(),
+	 * which is registered in psci_idle_syscore_ops and would be invoked by
+	 * syscore_suspend(), skips its genpd work — those devices were already
+	 * handled by dev_pm_genpd_suspend/resume() above.
+	 */
+	if (s2idle && psci_power_state_system_context_loss(state)) {
+		psci_s2idle_syscore_skip = true;
+		ret = syscore_suspend();
+		if (ret) {
+			psci_s2idle_syscore_skip = false;
+			dev_pm_genpd_resume(pd_dev);
+			cpu_pm_exit();
+			psci_clear_domain_state();
+			return -1;
+		}
+		atomic_set(&psci_s2idle_syscore_pending, 1);
+	}
+
 	trace_psci_domain_idle_enter(dev->cpu, state, s2idle);
 	ret = psci_cpu_suspend_enter(state) ? -1 : idx;
 	trace_psci_domain_idle_exit(dev->cpu, state, s2idle);
+
+	/*
+	 * The first CPU to return from psci_cpu_suspend_enter() wins the
+	 * atomic exchange and calls syscore_resume() on behalf of all CPUs.
+	 * psci_s2idle_syscore_skip remains true so the psci_idle_syscore_ops
+	 * callback skips its genpd work; each CPU handles its own genpd below.
+	 */
+	if (s2idle && atomic_xchg(&psci_s2idle_syscore_pending, 0)) {
+		syscore_resume();
+		psci_s2idle_syscore_skip = false;
+	}
 
 	if (s2idle)
 		dev_pm_genpd_resume(pd_dev);
@@ -155,6 +209,15 @@ static void psci_idle_syscore_switch(bool suspend)
 	bool cleared = false;
 	struct device *dev;
 	int cpu;
+
+	/*
+	 * Skip genpd work when called re-entrantly from
+	 * __psci_enter_domain_idle_state() during an s2idle system-level
+	 * context-loss event.  The CPU genpd devices were already
+	 * suspended/resumed by dev_pm_genpd_suspend/resume() in that function.
+	 */
+	if (psci_s2idle_syscore_skip)
+		return;
 
 	for_each_possible_cpu(cpu) {
 		dev = per_cpu_ptr(&psci_cpuidle_data, cpu)->dev;
