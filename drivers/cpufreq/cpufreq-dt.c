@@ -32,6 +32,8 @@ struct private_data {
 	struct cpufreq_frequency_table *freq_table;
 	bool have_static_opps;
 	int opp_token;
+	struct clk **sibling_clks;
+	int num_sibling_clks;
 };
 
 static LIST_HEAD(priv_list);
@@ -86,7 +88,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	struct device *cpu_dev;
 	struct clk *cpu_clk;
 	unsigned int transition_latency;
-	int ret;
+	int ret, cpu, i, num_cpus;
 
 	priv = cpufreq_dt_find_data(policy->cpu);
 	if (!priv) {
@@ -100,6 +102,66 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		ret = PTR_ERR(cpu_clk);
 		dev_err(cpu_dev, "%s: failed to get clk: %d\n", __func__, ret);
 		return ret;
+	}
+
+	ret = clk_prepare_enable(cpu_clk);
+	if (ret) {
+		dev_err(cpu_dev, "%s: failed to prepare+enable clk: %d\n",
+			__func__, ret);
+		clk_put(cpu_clk);
+		return ret;
+	}
+
+	/*
+	 * For shared OPP policies, each CPU may have its own distinct clock
+	 * (e.g. separate SCMI clock IDs). Prepare+enable all sibling CPU
+	 * clocks to prevent the CCF clk_disable_unused sweep from disabling
+	 * clocks of CPUs that share this policy but aren't the policy owner.
+	 */
+	num_cpus = cpumask_weight(priv->cpus);
+	if (num_cpus > 1) {
+		priv->sibling_clks = kcalloc(num_cpus, sizeof(*priv->sibling_clks),
+					     GFP_KERNEL);
+		if (!priv->sibling_clks) {
+			clk_disable_unprepare(cpu_clk);
+			clk_put(cpu_clk);
+			return -ENOMEM;
+		}
+
+		i = 0;
+		for_each_cpu(cpu, priv->cpus) {
+			struct device *sibling_dev;
+			struct clk *sibling_clk;
+
+			/* Skip the policy owner - already handled above */
+			if (cpu == policy->cpu) {
+				i++;
+				continue;
+			}
+
+			sibling_dev = get_cpu_device(cpu);
+			if (!sibling_dev) {
+				i++;
+				continue;
+			}
+
+			sibling_clk = clk_get(sibling_dev, NULL);
+			if (IS_ERR(sibling_clk)) {
+				i++;
+				continue;
+			}
+
+			ret = clk_prepare_enable(sibling_clk);
+			if (ret) {
+				clk_put(sibling_clk);
+				i++;
+				continue;
+			}
+
+			priv->sibling_clks[i] = sibling_clk;
+			priv->num_sibling_clks++;
+			i++;
+		}
 	}
 
 	transition_latency = dev_pm_opp_get_max_transition_latency(cpu_dev);
@@ -134,6 +196,23 @@ static int cpufreq_offline(struct cpufreq_policy *policy)
 
 static void cpufreq_exit(struct cpufreq_policy *policy)
 {
+	struct private_data *priv = policy->driver_data;
+	int i, num_cpus;
+
+	if (priv->sibling_clks) {
+		num_cpus = cpumask_weight(priv->cpus);
+		for (i = 0; i < num_cpus; i++) {
+			if (priv->sibling_clks[i]) {
+				clk_disable_unprepare(priv->sibling_clks[i]);
+				clk_put(priv->sibling_clks[i]);
+			}
+		}
+		kfree(priv->sibling_clks);
+		priv->sibling_clks = NULL;
+		priv->num_sibling_clks = 0;
+	}
+
+	clk_disable_unprepare(policy->clk);
 	clk_put(policy->clk);
 }
 
