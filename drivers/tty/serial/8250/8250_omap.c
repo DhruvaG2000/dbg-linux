@@ -1484,12 +1484,15 @@ static int omap8250_probe(struct platform_device *pdev)
 	if (!up.port.uartclk) {
 		struct clk *clk;
 
-		clk = devm_clk_get(&pdev->dev, NULL);
+		clk = devm_clk_get_enabled(&pdev->dev, NULL);
 		if (IS_ERR(clk)) {
 			if (PTR_ERR(clk) == -EPROBE_DEFER)
 				return -EPROBE_DEFER;
 		} else {
 			up.port.uartclk = clk_get_rate(clk);
+			dev_info(&pdev->dev,
+				 "UART_CLK_DEBUG: got clk via devm_clk_get_enabled (rate=%lu) - clock is now prepare+enabled, protected from clk_disable_unused\n",
+				 clk_get_rate(clk));
 		}
 	}
 
@@ -1590,6 +1593,8 @@ static int omap8250_probe(struct platform_device *pdev)
 		goto err;
 	}
 	priv->line = ret;
+	dev_info(&pdev->dev,
+		 "UART_CLK_DEBUG: probe complete, calling pm_runtime_put_autosuspend - device may runtime_suspend and clock may be gated\n");
 	pm_runtime_mark_last_busy(&pdev->dev);
 	pm_runtime_put_autosuspend(&pdev->dev);
 
@@ -1654,6 +1659,9 @@ static int omap8250_suspend(struct device *dev)
 	struct uart_8250_port *up = serial8250_get_port(priv->line);
 	int err = 0;
 
+	dev_info(dev, "UART_CLK_DEBUG: omap8250_suspend enter (may_wakeup=%d, console=%d, console_suspend_enabled=%d)\n",
+		 device_may_wakeup(dev), uart_console(&up->port), console_suspend_enabled);
+
 	err = omap8250_select_wakeup_pinctrl(dev, priv);
 	if (err) {
 		dev_err(dev, "Failed to select wakeup pinctrl, aborting suspend %pe\n",
@@ -1669,8 +1677,10 @@ static int omap8250_suspend(struct device *dev)
 	if (!device_may_wakeup(dev))
 		priv->wer = 0;
 	serial_out(up, UART_OMAP_WER, priv->wer);
-	if (uart_console(&up->port) && console_suspend_enabled)
+	if (uart_console(&up->port) && console_suspend_enabled) {
+		dev_info(dev, "UART_CLK_DEBUG: calling pm_runtime_force_suspend (console UART will lose clock)\n");
 		err = pm_runtime_force_suspend(dev);
+	}
 	flush_work(&priv->qos_work);
 
 	return err;
@@ -1682,6 +1692,8 @@ static int omap8250_resume(struct device *dev)
 	struct uart_8250_port *up = serial8250_get_port(priv->line);
 	int err;
 
+	dev_info(dev, "UART_CLK_DEBUG: omap8250_resume enter\n");
+
 	err = pinctrl_select_default_state(dev);
 	if (err) {
 		dev_err(dev, "Failed to select default pinctrl state on resume: %pe\n",
@@ -1690,6 +1702,7 @@ static int omap8250_resume(struct device *dev)
 	}
 
 	if (uart_console(&up->port) && console_suspend_enabled) {
+		dev_info(dev, "UART_CLK_DEBUG: calling pm_runtime_force_resume (console UART clock restore)\n");
 		err = pm_runtime_force_resume(dev);
 		if (err)
 			return err;
@@ -1769,6 +1782,9 @@ static int omap8250_runtime_suspend(struct device *dev)
 	struct omap8250_priv *priv = dev_get_drvdata(dev);
 	struct uart_8250_port *up = NULL;
 
+	dev_info(dev, "UART_CLK_DEBUG: runtime_suspend called - PM domain will gate clock\n");
+	dump_stack();
+
 	if (priv->line >= 0)
 		up = serial8250_get_port(priv->line);
 
@@ -1801,6 +1817,8 @@ static int omap8250_runtime_resume(struct device *dev)
 {
 	struct omap8250_priv *priv = dev_get_drvdata(dev);
 	struct uart_8250_port *up = NULL;
+
+	dev_info(dev, "UART_CLK_DEBUG: runtime_resume called - PM domain will ungate clock\n");
 
 	/* Did the hardware wake to a device IO interrupt before a wakeirq? */
 	if (atomic_read(&priv->active))
